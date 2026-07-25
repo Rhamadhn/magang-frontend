@@ -234,7 +234,7 @@ const AppSidebar: React.FC = () => {
           {isExpanded || isHovered || isMobileOpen ? (
             <img src="/images/logo/logo-pt.png" alt="Logo" width={190} height={40} />
           ) : (
-            <img src="/images/logo/logo-pt.png" alt="Logo" width={32} height={32} />
+            <img src="/images/logo/logo-pt.png" alt="Logo" width={24} height={24} />
           )}
         </Link>
       </div>
