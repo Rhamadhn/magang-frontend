@@ -117,11 +117,11 @@ export default function SignInForm() {
             </button>
           </div>
 
-          <div className="flex justify-end">
+          {/* <div className="flex justify-end">
             <Link to="#!" className="text-sm font-medium text-brand-500 hover:underline">
               Lupa password?
             </Link>
-          </div>
+          </div> */}
         </div>
 
         {/* SUBMIT BUTTON */}

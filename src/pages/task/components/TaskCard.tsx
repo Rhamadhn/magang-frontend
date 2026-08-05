@@ -1,22 +1,20 @@
 import React from 'react';
 import { Task } from '../TaskPage';
-
-// Menggunakan icon bawaan template agar konsisten secara visual
-import { CalenderIcon } from "../../../icons"; 
+import { CalenderIcon, ErrorIcon } from "../../../icons"; 
 
 interface TaskCardProps {
   task: Task;
-  onOpenDetail: (id: number) => void;
+  onOpenDetail: (id: number | string) => void;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onOpenDetail }) => {
-  // Menyelaraskan warna status badge dengan design system template
+  const isUrgent = task.prioritas === 'urgent';
+
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'todo': 
         return 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-500/20';
       case 'ongoing': 
-        // 🛠️ Ditambahkan: Aksen Indigo profesional untuk status pengerjaan aktif
         return 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-500/20';
       case 'review': 
         return 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-500/20';
@@ -32,7 +30,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onOpenDetail }) => {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'todo': return 'To-Do';
-      case 'ongoing': return 'Ongoing'; // 🛠️ Ditambahkan
+      case 'ongoing': return 'Ongoing';
       case 'review': return 'Review';
       case 'selesai': return 'Selesai';
       case 'revisi': return 'Revisi';
@@ -41,12 +39,26 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onOpenDetail }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-white/[0.02] rounded-2xl border border-gray-100 dark:border-gray-800 p-5 hover:shadow-xl hover:shadow-gray-100 dark:hover:shadow-none transition-all duration-200 flex flex-col justify-between">
+    <div 
+      className={`rounded-2xl border p-5 transition-all duration-200 flex flex-col justify-between relative ${
+        isUrgent
+          ? 'bg-red-50/10 dark:bg-red-500/[0.03] border-red-500/40 shadow-lg shadow-red-500/5 dark:shadow-none'
+          : 'bg-white dark:bg-white/[0.02] border-gray-100 dark:border-gray-800 hover:shadow-xl hover:shadow-gray-100 dark:hover:shadow-none'
+      }`}
+    >
       <div>
         <div className="flex justify-between items-center mb-4">
-          <span className={`text-[11px] px-2.5 py-1 rounded-md font-bold uppercase tracking-wider border ${getStatusStyle(task.status)}`}>
-            {getStatusLabel(task.status)}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`text-[11px] px-2.5 py-1 rounded-md font-bold uppercase tracking-wider border ${getStatusStyle(task.status)}`}>
+              {getStatusLabel(task.status)}
+            </span>
+            {isUrgent && (
+              <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md font-extrabold uppercase bg-red-600 text-white shadow-sm shadow-red-600/30">
+                {/* <ErrorIcon className="w-3 h-3" /> */}
+                Urgent
+              </span>
+            )}
+          </div>
           {task.deadline && (
             <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 font-medium">
               <CalenderIcon className="w-3.5 h-3.5" />
@@ -68,10 +80,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onOpenDetail }) => {
         </div>
       )}
 
-      {/* Tombol aksi disesuaikan dengan button style di DivisionPage */}
       <button
         onClick={() => onOpenDetail(task.id)}
-        className="w-full text-center py-2.5 px-4 rounded-xl text-xs font-bold bg-gray-50 dark:bg-white/[0.03] text-gray-600 dark:text-gray-300 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-500 dark:hover:text-white border border-gray-100 dark:border-gray-800/80 hover:border-brand-500 dark:hover:border-brand-500 transition-all duration-200 outline-none"
+        className={`w-full text-center py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-200 outline-none border ${
+          isUrgent
+            ? 'bg-red-600 text-white hover:bg-red-700 border-red-600 shadow-md shadow-red-600/20'
+            : 'bg-gray-50 dark:bg-white/[0.03] text-gray-600 dark:text-gray-300 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-500 dark:hover:text-white border-gray-100 dark:border-gray-800/80 hover:border-brand-500 dark:hover:border-brand-500'
+        }`}
       >
         Lihat Detail & Submit
       </button>

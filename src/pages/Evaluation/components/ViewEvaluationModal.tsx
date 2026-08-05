@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Modal } from "../../../components/ui/modal";
 import Button from "../../../components/ui/button/Button";
 import { evaluationService } from "../../../api/evaluationService";
-import { InfoIcon, TrashBinIcon } from "../../../icons"; // Pastikan import ikon lo sesuai
+import { InfoIcon, TrashBinIcon } from "../../../icons";
 
 interface ViewEvaluationModalProps {
   internId: string;
@@ -59,6 +59,16 @@ export const ViewEvaluationModal: React.FC<ViewEvaluationModalProps> = ({
     }
   };
 
+  // Helper function untuk format tampilan nama enum agar lebih rapi di UI
+  const formatLevelLabel = (level?: string) => {
+    if (!level) return "-";
+    const normalized = level.toLowerCase();
+    if (normalized === "sangat_baik") return "SANGAT BAIK";
+    if (normalized === "baik") return "BAIK";
+    if (normalized === "cukup") return "CUKUP";
+    return level.toUpperCase();
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-[520px] p-8">
       {!showConfirmDelete ? (
@@ -91,16 +101,18 @@ export const ViewEvaluationModal: React.FC<ViewEvaluationModalProps> = ({
                     <span className="text-sm font-bold text-gray-800 dark:text-white/90 leading-tight">
                       {item.kriteria?.nama_kriteria || "Kriteria Penilaian"}
                     </span>
+                    
+                    {/* ENUM PENYESUAIAN WARNA BADGE */}
                     <span
                       className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider shrink-0 ${
-                        item.level?.toLowerCase() === "mahir"
+                        item.level?.toLowerCase() === "sangat_baik"
                           ? "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400"
-                          : item.level?.toLowerCase() === "menengah"
+                          : item.level?.toLowerCase() === "baik"
                           ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
                           : "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400"
                       }`}
                     >
-                      {item.level}
+                      {formatLevelLabel(item.level)}
                     </span>
                   </div>
 
@@ -138,11 +150,11 @@ export const ViewEvaluationModal: React.FC<ViewEvaluationModalProps> = ({
           <div className="mt-8 flex gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
             {data.length > 0 && (
               <Button
-              className="flex-1 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white border-none rounded-xl font-semibold transition-all duration-200 shadow-md shadow-red-500/10 hover:shadow-lg hover:shadow-red-500/20"
-              onClick={() => setShowConfirmDelete(true)}
-            >
-              Reset Nilai
-            </Button>
+                className="flex-1 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white border-none rounded-xl font-semibold transition-all duration-200 shadow-md shadow-red-500/10 hover:shadow-lg hover:shadow-red-500/20"
+                onClick={() => setShowConfirmDelete(true)}
+              >
+                Reset Nilai
+              </Button>
             )}
             <Button className="flex-1 rounded-xl font-medium" variant="outline" onClick={onClose}>
               Tutup Jendela
@@ -150,7 +162,7 @@ export const ViewEvaluationModal: React.FC<ViewEvaluationModalProps> = ({
           </div>
         </div>
       ) : (
-        /* SCREEN KONFIRMASI HAPUS (KONSISTEN DENGAN MODAL DELETE DIVISI) */
+        /* SCREEN KONFIRMASI HAPUS */
         <div className="flex flex-col items-center text-center py-2">
           <div className="w-16 h-16 bg-red-50 dark:bg-red-500/10 text-red-600 rounded-full flex items-center justify-center mb-5">
             <TrashBinIcon className="w-7 h-7" />

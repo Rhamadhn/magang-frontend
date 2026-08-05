@@ -16,7 +16,7 @@ import {
 
 interface DrawerProps {
   isOpen: boolean;
-  taskId: number | null;
+  taskId: string | number | null;
   onClose: () => void;
   onRefresh: () => void;
 }

@@ -20,6 +20,13 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, any>>({}); 
 
+  // Definisi Opsi Enum Baru Sesuai Migration Database
+  const LEVEL_OPTIONS = [
+    { value: "cukup", label: "Cukup", badgeClass: "bg-amber-500 text-white" },
+    { value: "baik", label: "Baik", badgeClass: "bg-blue-500 text-white" },
+    { value: "sangat_baik", label: "Sangat Baik", badgeClass: "bg-green-500 text-white" },
+  ];
+
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -36,7 +43,8 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
           const match = existingData.find((ex: any) => ex.kriteria_id === k.id);
           initialPenilaian[k.id] = {
             kriteria_id: k.id,
-            level: match ? match.level?.toLowerCase() : "pemula", 
+            // Normalisasi ke lowercase agar pas dengan enum backend ('cukup', 'baik', 'sangat_baik')
+            level: match ? match.level?.toLowerCase() : "cukup", 
             mengapa_level_ini: match ? match.mengapa_level_ini : "", 
             saran_pengembangan: match ? match.saran_pengembangan : ""
           };
@@ -46,7 +54,6 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
       } catch (err) {
         console.error("Gagal sinkronisasi data evaluasi", err);
       } finally {
-        // Simulasi jeda sedikit agar efek transisi lazy loading terasa halus
         setTimeout(() => setLoading(false), 300);
       }
     };
@@ -61,7 +68,6 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
       ...prev,
       [kriteriaId]: { ...prev[kriteriaId], level }
     }));
-    // Bersihkan error field level jika ada perubahan data baru
     if (errors[kriteriaId]?.level) {
       setErrors(prev => {
         const copy = { ...prev };
@@ -76,7 +82,6 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
       ...prev,
       [kriteriaId]: { ...prev[kriteriaId], [field]: value }
     }));
-    // Bersihkan error jika user mulai mengetik ulang perbaikan
     if (errors[kriteriaId]?.[field]) {
       setErrors(prev => {
         const copy = { ...prev };
@@ -103,8 +108,6 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
         const mappedErrors: Record<string, any> = {};
         let firstFailedIndex = -1;
 
-        // Memetakan error bulk array backend (misal: "penilaian.0.mengapa_level_ini") 
-        // ke format ID kriteria lokal di frontend
         Object.keys(backendErrors).forEach((key) => {
           const match = key.match(/^penilaian\.(\d+)\.(.+)$/);
           if (match) {
@@ -118,7 +121,6 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
               }
               mappedErrors[targetKriteriaId][fieldName] = backendErrors[key][0] || backendErrors[key];
               
-              // Cari index kriteria pertama yang error untuk memindahkan slide otomatis
               if (firstFailedIndex === -1) {
                 firstFailedIndex = kriteria.findIndex(k => k.id === targetKriteriaId);
               }
@@ -128,7 +130,6 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
 
         setErrors(mappedErrors);
 
-        // UX Intelligence: Geser slide ke kriteria yang gagal validasi pertama kali
         if (firstFailedIndex !== -1) {
           setCurrentStep(firstFailedIndex);
         }
@@ -140,10 +141,8 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
     }
   };
 
-  /* SKELETON LAZY LOADING VIEW */
   if (loading) return (
     <div className="space-y-6 max-w-[850px] mx-auto animate-pulse">
-      {/* Skeleton Header */}
       <div className="p-8 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800/80 flex justify-between items-center">
         <div className="flex items-center gap-4 w-2/3">
           <div className="w-12 h-12 bg-gray-200 dark:bg-gray-800 rounded-xl shrink-0"></div>
@@ -154,7 +153,6 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
         </div>
         <div className="w-24 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl"></div>
       </div>
-      {/* Skeleton Body */}
       <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800/80 rounded-2xl h-[420px] p-8 space-y-6">
         <div className="h-14 bg-gray-200 dark:bg-gray-800 rounded-xl w-full"></div>
         <div className="grid grid-cols-12 gap-6 pt-4">
@@ -255,13 +253,13 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
                   Pilih Tingkat Kompetensi <span className="text-red-500">*</span>
                 </label>
                 <div className="flex flex-col gap-2.5">
-                  {['pemula', 'menengah', 'mahir'].map((lvl) => {
-                    const isSelected = penilaian[activeKriteria?.id]?.level === lvl;
+                  {LEVEL_OPTIONS.map((opt) => {
+                    const isSelected = penilaian[activeKriteria?.id]?.level === opt.value;
                     return (
                       <button
-                        key={lvl}
+                        key={opt.value}
                         type="button"
-                        onClick={() => handleLevelChange(activeKriteria.id, lvl)}
+                        onClick={() => handleLevelChange(activeKriteria.id, opt.value)}
                         className={`w-full flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all group ${
                           isSelected
                             ? 'border-brand-500 bg-brand-500/5 text-brand-600 dark:text-brand-400'
@@ -271,12 +269,12 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
                         <span className={`text-xs font-bold uppercase tracking-wider ${
                           isSelected ? 'text-brand-600 dark:text-brand-400' : 'text-gray-700 dark:text-gray-300'
                         }`}>
-                          {lvl}
+                          {opt.label}
                         </span>
                         
                         <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest rounded-md ${
                           isSelected 
-                            ? lvl === 'mahir' ? 'bg-green-500 text-white' : lvl === 'menengah' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-white'
+                            ? opt.badgeClass
                             : 'bg-gray-100 dark:bg-gray-800 text-gray-400 group-hover:text-gray-600'
                         }`}>
                           {isSelected ? 'Terpilih' : 'Opsi'}
@@ -287,7 +285,7 @@ export const MentorEvaluationForm: React.FC<Props> = ({ intern, periode, onClose
                 </div>
               </div>
 
-              {/* INPUT JUSTIFIKASI & SARAN (Kanan) + VALIDASI ERROR LIVE */}
+              {/* INPUT JUSTIFIKASI & SARAN (Kanan) */}
               <div className="lg:col-span-7 space-y-4">
                 <div className="space-y-1.5">
                   <label className="block text-[10px] font-bold uppercase text-gray-400 tracking-widest">
